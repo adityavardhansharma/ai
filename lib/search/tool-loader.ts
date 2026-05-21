@@ -37,7 +37,8 @@ export async function loadConfiguredTools({
   selectedConnectors,
 }: LoadConfiguredToolsParams): Promise<Record<string, any>> {
   const tools: Record<string, any> = {};
-  const uniqueToolNames = [...new Set(activeToolNames)];
+  const WEB_ONLY_TOOL_ALLOWLIST = new Set(['web_search', 'file_query_search']);
+  const uniqueToolNames = [...new Set(activeToolNames)].filter((toolName) => WEB_ONLY_TOOL_ALLOWLIST.has(toolName));
   let memoryTools: { searchMemories: any; addMemory: any } | null = null;
 
   await Promise.all(
@@ -206,10 +207,6 @@ export async function loadConfiguredTools({
       }
     }),
   );
-
-  if (includeMcpTools) {
-    Object.assign(tools, mcpDynamicTools);
-  }
 
   return tools;
 }
