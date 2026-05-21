@@ -30,40 +30,25 @@ Answer requirements:
 - Make sure the final answer actually reflects the evidence you found.`;
 
 const groupTools = {
-  web: [
-    'web_search',
-    'greeting',
-    'code_interpreter',
-    'get_weather_data',
-    'retrieve',
-    'text_translate',
-    'nearby_places_search',
-    'track_flight',
-    'movie_or_tv_search',
-    'trending_movies',
-    'find_place_on_map',
-    'trending_tv',
-    'datetime',
-    'file_query_search',
-  ] as const,
-  academic: ['academic_search', 'code_interpreter', 'datetime', 'file_query_search'] as const,
-  youtube: ['youtube_search', 'datetime', 'file_query_search'] as const,
-  spotify: ['spotify_search', 'datetime', 'file_query_search'] as const,
-  code: ['code_context', 'file_query_search'] as const,
-  reddit: ['reddit_search', 'datetime', 'file_query_search'] as const,
-  github: ['github_search', 'datetime', 'file_query_search'] as const,
-  stocks: ['stock_chart', 'currency_converter', 'datetime', 'file_query_search'] as const,
-  crypto: ['coin_data', 'coin_ohlc', 'coin_data_by_contract', 'datetime', 'file_query_search'] as const,
+  web: ['web_search', 'file_query_search'] as const,
+  academic: ['web_search', 'file_query_search'] as const,
+  youtube: ['web_search', 'file_query_search'] as const,
+  spotify: ['web_search', 'file_query_search'] as const,
+  code: ['web_search', 'file_query_search'] as const,
+  reddit: ['web_search', 'file_query_search'] as const,
+  github: ['web_search', 'file_query_search'] as const,
+  stocks: ['web_search', 'file_query_search'] as const,
+  crypto: ['web_search', 'file_query_search'] as const,
   chat: ['file_query_search'] as const,
-  extreme: ['extreme_search'] as const,
-  x: ['x_search', 'file_query_search'] as const,
-  memory: ['datetime', 'search_memories', 'add_memory', 'file_query_search'] as const,
-  connectors: ['connectors_search', 'datetime', 'file_query_search'] as const,
+  extreme: ['web_search', 'file_query_search'] as const,
+  x: ['web_search', 'file_query_search'] as const,
+  memory: ['web_search', 'file_query_search'] as const,
+  connectors: ['web_search', 'file_query_search'] as const,
   mcp: [''] as const,
-  'multi-agent': ['xai_web_search', 'xai_x_search'] as const,
-  buddy: ['datetime', 'search_memories', 'add_memory', 'file_query_search'] as const,
-  prediction: ['prediction_search', 'datetime', 'file_query_search'] as const,
-  canvas: ['extreme_search'] as const,
+  'multi-agent': ['web_search', 'file_query_search'] as const,
+  buddy: ['web_search', 'file_query_search'] as const,
+  prediction: ['web_search', 'file_query_search'] as const,
+  canvas: ['web_search', 'file_query_search'] as const,
 } as const;
 
 const linkFormatExamples = `
@@ -2433,6 +2418,10 @@ export async function getGroupConfig(
   lightweightUser?: { userId: string; email: string; isProUser: boolean } | null,
   fullUserPromise?: Promise<ComprehensiveUserData | null>,
 ) {
+  // Enforce global web-only mode.
+  if (groupId !== 'web') {
+    groupId = 'web';
+  }
   if (
     groupId === 'memory' ||
     groupId === 'buddy' ||

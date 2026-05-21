@@ -92,6 +92,10 @@ interface ChatInitializationParams {
   enableDetailedTiming?: boolean;
 }
 
+const REQUEST_TIMEOUT_MS = 120000;
+const MAX_TOOL_STEPS_DEFAULT = 5;
+const MAX_TOOL_STEPS_MCP = 12;
+
 function initializeChatAndChecks({
   chatQueryPromise,
   lightweightUser,
@@ -417,6 +421,7 @@ export async function POST(req: Request) {
     autoRouterEnabled,
     autoRouterConfig,
   } = await req.json();
+  const normalizedGroup = 'web';
   recordTiming('parse_request_body', opStart);
 
   if (!Array.isArray(requestMessages) || requestMessages.length === 0) {
@@ -443,7 +448,7 @@ export async function POST(req: Request) {
   console.log('🔍 Search API:', {
     model,
     requestedModel,
-    group,
+    group: normalizedGroup,
     latitude,
     longitude,
     isAutoRouted,
@@ -473,7 +478,7 @@ export async function POST(req: Request) {
   // Start full user fetch immediately (doesn't block early exits)
   const isProUser = lightweightUser?.isProUser ?? false;
   const isMaxUser = lightweightUser?.isMaxUser ?? false;
-  const shouldUseXaiMultiAgent = group === 'multi-agent' && isProUser;
+  const shouldUseXaiMultiAgent = false;
   opStart = Date.now();
   const fullUserPromise = lightweightUser ? getCurrentUser() : Promise.resolve(null);
   recordTiming('create_full_user_promise', opStart);
@@ -502,12 +507,7 @@ export async function POST(req: Request) {
     if (requiresAuthentication(model)) {
       return new ChatSDKError('unauthorized:model', `${model} requires authentication`).toResponse();
     }
-    if (group === 'extreme') {
-      return new ChatSDKError('unauthorized:auth', 'Authentication required to use Extreme Search mode').toResponse();
-    }
-    if (group === 'mcp') {
-      return new ChatSDKError('unauthorized:auth', 'Authentication required to use MCP mode').toResponse();
-    }
+    // Web-only mode allows unauthenticated search with standard limits.
   } else {
     // Fast auth checks using lightweight user (no additional DB calls)
     if (requiresMaxSubscription(model) && !lightweightUser.isMaxUser) {
@@ -516,15 +516,13 @@ export async function POST(req: Request) {
     if (requiresProSubscription(model) && !lightweightUser.isProUser && !lightweightUser.isMaxUser) {
       return new ChatSDKError('upgrade_required:model', `${model} requires a Pro subscription`).toResponse();
     }
-    if (group === 'mcp' && !lightweightUser.isProUser && !lightweightUser.isMaxUser) {
-      return new ChatSDKError('upgrade_required:auth', 'MCP mode requires a Pro subscription').toResponse();
-    }
+    // Web-only mode has no mode-specific subscription checks.
   }
 
   // Start config and custom instructions in parallel
   // Use lightweightUser.userId directly instead of waiting for fullUserPromise
   opStart = Date.now();
-  const configPromise = getGroupConfig(group, lightweightUser, fullUserPromise);
+  const configPromise = getGroupConfig(normalizedGroup, lightweightUser, fullUserPromise);
   const customInstructionsPromise =
     lightweightUser && (isCustomInstructionsEnabled ?? true)
       ? getCachedCustomInstructionsByUserId(lightweightUser.userId)
@@ -795,6 +793,10 @@ export async function POST(req: Request) {
   }
 
   const abortController = new AbortController();
+  const requestTimeout = setTimeout(() => {
+    console.warn(`⏱️ Request timeout reached (${REQUEST_TIMEOUT_MS}ms), aborting stream.`);
+    abortController.abort('request_timeout');
+  }, REQUEST_TIMEOUT_MS);
   let finalUsageMetadata: {
     completionTime: number | null;
     inputTokens: number | null;
@@ -821,7 +823,7 @@ export async function POST(req: Request) {
         });
       };
 
-      const shouldLoadMcpTools = Boolean(lightweightUser?.isProUser && (group === 'mcp' || group === 'extreme'));
+      const shouldLoadMcpTools = false;
 
       if (shouldLoadMcpTools && lightweightUser) {
         const { resolveUserMcpTools } = await import('@/lib/tools/mcp-client');
@@ -838,10 +840,7 @@ export async function POST(req: Request) {
       }
 
       const dynamicMcpToolNames = Object.keys(mcpDynamicTools);
-      const configuredActiveTools = [
-        ...activeTools,
-        ...(group === 'mcp' || group === 'extreme' ? dynamicMcpToolNames : []),
-      ];
+      const configuredActiveTools = [...activeTools];
       const streamActiveTools =
         model === 'scira-qwen-coder-plus' || model === 'scira-qwen-3-vl' || model === 'scira-qwen-3-vl-thinking'
           ? [...configuredActiveTools].filter((tool) => tool !== 'code_interpreter')
@@ -853,7 +852,7 @@ export async function POST(req: Request) {
         timezone,
         contextFiles,
         extremeSearchModel,
-        includeMcpTools: group === 'extreme' || group === 'mcp',
+        includeMcpTools: false,
         mcpDynamicTools,
         lightweightUser,
         selectedConnectors,
@@ -961,7 +960,9 @@ export async function POST(req: Request) {
         model: shouldUseXaiMultiAgent ? xai.responses('grok-4.20-multi-agent') : scira.languageModel(model),
         messages: processedMessages,
         ...getModelParameters(shouldUseXaiMultiAgent ? 'grok-4.20-multi-agent' : model),
-        stopWhen: stepCountIs(shouldUseXaiMultiAgent ? 5 : group === 'mcp' ? 50 : 5),
+        stopWhen: stepCountIs(
+          shouldUseXaiMultiAgent ? MAX_TOOL_STEPS_DEFAULT : MAX_TOOL_STEPS_DEFAULT,
+        ),
         ...(shouldUseXaiMultiAgent
           ? {}
           : model === 'scira-default' ||
@@ -1461,7 +1462,7 @@ export async function POST(req: Request) {
             Boolean(latestStep) && latestStep.toolCalls.length > 0 && latestStep.toolResults.length > 0;
 
           // MCP mode and xAI multi-agent mode: keep tools available across steps.
-          if (group === 'mcp' || shouldUseXaiMultiAgent) {
+          if (shouldUseXaiMultiAgent) {
             return shouldUseXaiMultiAgent
               ? {
                   toolChoice: 'auto' as const,
@@ -1537,11 +1538,13 @@ export async function POST(req: Request) {
           setUsageMetadataFromUsage(event.usage, processingTime);
         },
         onAbort(event) {
+          clearTimeout(requestTimeout);
           const processingTime = (Date.now() - streamStartTime) / 1000;
           setUsageMetadataFromSteps(event.steps, processingTime);
           closeMcpToolsSafe().catch(() => null);
         },
         onFinish: async (event) => {
+          clearTimeout(requestTimeout);
           // console.log('Finish event: ', event);
           const processingTime = (Date.now() - streamStartTime) / 1000;
           setUsageMetadataFromUsage(event.totalUsage, processingTime);
@@ -1602,6 +1605,7 @@ export async function POST(req: Request) {
           }
         },
         onError(event) {
+          clearTimeout(requestTimeout);
           const processingTime = (Date.now() - requestStartTime) / 1000;
           console.error(`❌ Request failed: ${processingTime.toFixed(2)}s`, event.error);
           closeMcpToolsSafe().catch(() => null);

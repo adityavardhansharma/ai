@@ -153,7 +153,6 @@
     "next": "^16.2.1-canary.2",
     "next-themes": "^0.4.6",
     "nuqs": "^2.8.9",
-    "parallel-web": "^0.3.2",
     "pdf-lib": "^1.17.1",
     "pg": "^8.20.0",
     "radix-ui": "^1.4.3",
@@ -186,7 +185,8 @@
     "vaul": "^1.1.2",
     "web-haptics": "^0.0.6",
     "workers-ai-provider": "^3.1.4",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@clerk/nextjs": "^6.22.0"
   },
   "devDependencies": {
     "@react-email/preview-server": "^5.2.10",
