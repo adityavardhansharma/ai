@@ -1,16 +1,34 @@
-import { createAuthClient } from 'better-auth/react';
-import { dodopaymentsClient } from '@dodopayments/better-auth';
-import { polarClient } from '@polar-sh/better-auth';
-import { lastLoginMethodClient } from 'better-auth/client/plugins';
+'use client';
 
-export const betterauthClient = createAuthClient({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_APP_URL : 'http://localhost:3000',
-  plugins: [dodopaymentsClient()],
-});
+import { useAuth, useUser } from '@clerk/nextjs';
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_APP_URL : 'http://localhost:3000',
-  plugins: [polarClient(), lastLoginMethodClient()],
-});
+export const signIn = () => {
+  window.location.href = '/sign-in';
+};
 
-export const { signIn, signOut, signUp, useSession } = authClient;
+export const signUp = () => {
+  window.location.href = '/sign-up';
+};
+
+export const useSession = () => {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+
+  return {
+    data: isSignedIn
+      ? {
+          user: {
+            id: user?.id,
+            email: user?.primaryEmailAddress?.emailAddress,
+            name: user?.fullName,
+          },
+        }
+      : null,
+    isPending: !isLoaded,
+  };
+};
+
+export const signOut = async () => {
+  const { signOut } = await import('@clerk/nextjs');
+  await signOut();
+};
