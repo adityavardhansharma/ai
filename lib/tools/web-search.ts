@@ -4,7 +4,7 @@ import Exa from 'exa-js';
 import { serverEnv } from '@/env/server';
 import { UIMessageStreamWriter } from 'ai';
 import { ChatMessage } from '../types';
-import Parallel from 'parallel-web';
+import type Parallel from 'parallel-web';
 import FirecrawlApp, { SearchResultWeb, SearchResultNews, SearchResultImages, Document } from '@mendable/firecrawl-js';
 import { all } from 'better-all';
 import { getBetterAllOptions } from '@/lib/better-all';
@@ -12,7 +12,6 @@ import { getBetterAllOptions } from '@/lib/better-all';
 // Singleton clients - initialized lazily and reused across requests
 let _searchClients: {
   exa: Exa;
-  parallel: Parallel;
   firecrawl: FirecrawlApp;
 } | null = null;
 
@@ -20,7 +19,6 @@ function getSearchClients() {
   if (!_searchClients) {
     _searchClients = {
       exa: new Exa(serverEnv.EXA_API_KEY),
-      parallel: new Parallel({ apiKey: serverEnv.PARALLEL_API_KEY }),
       firecrawl: new FirecrawlApp({ apiKey: serverEnv.FIRECRAWL_API_KEY }),
     };
   }
@@ -593,11 +591,11 @@ class ExaSearchStrategy implements SearchStrategy {
 }
 
 // Search provider factory
-const WEB_SEARCH_PROVIDERS = ['exa', 'parallel', 'firecrawl'] as const;
+const WEB_SEARCH_PROVIDERS = ['exa', 'firecrawl'] as const;
 type WebSearchProvider = (typeof WEB_SEARCH_PROVIDERS)[number];
 
 const normalizeWebSearchProvider = (provider: string): WebSearchProvider => {
-  if (provider === 'parallel' || provider === 'firecrawl' || provider === 'exa') {
+  if (provider === 'firecrawl' || provider === 'exa') {
     return provider;
   }
   return 'exa';
@@ -607,12 +605,10 @@ const createSearchStrategy = (
   provider: WebSearchProvider,
   clients: {
     exa: Exa;
-    parallel: Parallel;
     firecrawl: FirecrawlApp;
   },
 ): SearchStrategy => {
   const strategies = {
-    parallel: () => new ParallelSearchStrategy(clients.parallel, clients.firecrawl),
     firecrawl: () => new FirecrawlSearchStrategy(clients.firecrawl),
     exa: () => new ExaSearchStrategy(clients.exa, clients.firecrawl),
   };
@@ -627,7 +623,7 @@ export function webSearchTool(
   return tool({
     description: `This is the default tool of the app to be used to search the web for information with multiple queries(5-10), max results(15-20), topics, and quality.
     Very important Rules:
-    ...${searchProvider === 'parallel' ? 'The First Query should be the objective and the rest of the queries should be related to the objective' : ''}...
+    ...
     - The queries should always be in the same language as the user's message.
     - And count of the queries should be 5-10 always!
     - Assert to max number of results for each query to be 15-20.
