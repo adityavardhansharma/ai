@@ -1,16 +1,53 @@
-import { createAuthClient } from 'better-auth/react';
-import { dodopaymentsClient } from '@dodopayments/better-auth';
-import { polarClient } from '@polar-sh/better-auth';
-import { lastLoginMethodClient } from 'better-auth/client/plugins';
+'use client';
 
-export const betterauthClient = createAuthClient({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_APP_URL : 'http://localhost:3000',
-  plugins: [dodopaymentsClient()],
-});
+import { useAuth, useUser } from '@clerk/nextjs';
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_APP_URL : 'http://localhost:3000',
-  plugins: [polarClient(), lastLoginMethodClient()],
-});
+const notAvailable = async () => ({ data: null, error: { message: 'Billing auth client removed during Clerk migration' } });
 
-export const { signIn, signOut, signUp, useSession } = authClient;
+export const betterauthClient: any = {
+  dodopayments: {
+    checkoutSession: notAvailable,
+    customer: {
+      portal: async () => null,
+      subscriptions: { list: async () => ({ data: [], error: null }) },
+    },
+  },
+};
+
+export const authClient: any = {
+  getLastUsedLoginMethod: () => ({ data: null }),
+  customer: {
+    portal: async () => null,
+    orders: { list: async () => ({ data: [], error: null }) },
+  },
+};
+
+export const signIn = () => {
+  window.location.href = '/sign-in';
+};
+
+export const signUp = () => {
+  window.location.href = '/sign-up';
+};
+
+export const useSession = () => {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+
+  return {
+    data: isSignedIn
+      ? {
+          user: {
+            id: user?.id,
+            email: user?.primaryEmailAddress?.emailAddress,
+            name: user?.fullName,
+          },
+        }
+      : null,
+    isPending: !isLoaded,
+  };
+};
+
+export const signOut = async () => {
+  window.location.href = '/';
+};

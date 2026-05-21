@@ -3,7 +3,6 @@ import { z } from 'zod';
 import Exa from 'exa-js';
 import { serverEnv } from '@/env/server';
 import FirecrawlApp from '@mendable/firecrawl-js';
-import Parallel from 'parallel-web';
 import { Supadata } from '@supadata/js';
 import { allSettled } from 'better-all';
 import { getBetterAllOptions } from '@/lib/better-all';
@@ -205,7 +204,6 @@ function formatSupadataResponse(metadata: SupadataMetadata, url: string, transcr
 
 const supadata = new Supadata({ apiKey: serverEnv.SUPADATA_API_KEY });
 const exa = new Exa(serverEnv.EXA_API_KEY as string);
-const parallel = new Parallel({ apiKey: serverEnv.PARALLEL_API_KEY });
 const firecrawl = new FirecrawlApp({ apiKey: serverEnv.FIRECRAWL_API_KEY });
 
 // Helper function to retrieve content from a single URL
@@ -396,10 +394,9 @@ async function retrieveSingleUrl(
       }
     }
 
-    // General web scraping with Exa/Parallel/Firecrawl
+    // General web scraping with Exa (primary) and Firecrawl (fallback)
     console.log(`Retrieving content from ${url} with Exa AI, summary: ${include_summary}, livecrawl: ${live_crawl}`);
     let result;
-    let usingParallel = false;
     let usingFirecrawl = false;
     let source = 'exa';
 
@@ -411,56 +408,13 @@ async function retrieveSingleUrl(
       });
 
       if (!result.results || result.results.length === 0 || !result.results[0].text) {
-        console.log('Exa AI returned no content, falling back to Parallel');
-        usingParallel = true;
+        console.log('Exa AI returned no content, falling back to Firecrawl');
+        usingFirecrawl = true;
       }
     } catch (exaError) {
       console.error('Exa AI error:', exaError);
-      console.log('Falling back to Parallel');
-      usingParallel = true;
-    }
-
-    if (usingParallel) {
-      try {
-        console.log(`Trying Parallel extract for ${url}`);
-        const parallelResult = await parallel.beta.extract({
-          urls: [url],
-          excerpts: false,
-          full_content: true,
-          betas: ['search-extract-2025-10-10']
-        });
-
-        if (parallelResult.results && parallelResult.results.length > 0) {
-          const extractResult = parallelResult.results[0];
-          if (extractResult.full_content) {
-            console.log(`Parallel successfully extracted ${url}`);
-            source = 'parallel';
-            return {
-              url,
-              result: {
-                url: url,
-                content: extractResult.full_content,
-                title: extractResult.title || url.split('/').pop() || 'Retrieved Content',
-                description: extractResult.full_content.slice(0, 200) + '...',
-                author: undefined,
-                publishedDate: extractResult.publish_date || undefined,
-                image: undefined,
-                favicon: `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`,
-                language: 'en',
-              },
-              source,
-              response_time: (Date.now() - start) / 1000,
-            };
-          }
-        }
-
-        console.log('Parallel returned no content, falling back to Firecrawl');
-        usingFirecrawl = true;
-      } catch (parallelError) {
-        console.error('Parallel error:', parallelError);
-        console.log('Falling back to Firecrawl');
-        usingFirecrawl = true;
-      }
+      console.log('Falling back to Firecrawl');
+      usingFirecrawl = true;
     }
 
     if (usingFirecrawl) {
@@ -539,7 +493,7 @@ async function retrieveSingleUrl(
 
 export const retrieveTool = tool({
   description:
-    'Extract detailed content from one or multiple specific URLs that the user explicitly provides. ONLY use when user shares/pastes actual URLs. NEVER use for discovery, finding information, or after web_search. Automatically detects and fetches metadata and transcripts for YouTube videos, Twitter/X posts, TikTok videos, and Instagram posts using Supadata. For general URLs, uses Exa AI with Parallel and Firecrawl as fallbacks. Valid: user provides "https://example.com". Invalid: "latest news", "what\'s on website.com", or retrieving web_search results.',
+    'Extract detailed content from one or multiple specific URLs that the user explicitly provides. ONLY use when user shares/pastes actual URLs. NEVER use for discovery, finding information, or after web_search. Automatically detects and fetches metadata and transcripts for YouTube videos, Twitter/X posts, TikTok videos, and Instagram posts using Supadata. For general URLs, uses Exa AI with Firecrawl fallback. Valid: user provides "https://example.com". Invalid: "latest news", "what\'s on website.com", or retrieving web_search results.',
   inputSchema: z.object({
     url: z.array(z.string()).describe('Array of URLs to retrieve information from.'),
     content_type: z.array(ContentType).optional().describe(
@@ -647,4 +601,3 @@ export const retrieveTool = tool({
     }
   },
 });
-
