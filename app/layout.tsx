@@ -9,7 +9,6 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from '@/components/ui/sileo-toaster';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { NewChatHotkey } from '@/components/new-chat-hotkey';
-import { ClientAnalytics } from '@/components/client-analytics';
 import { HapticsProvider } from '@/components/haptics-provider';
 
 import { Providers } from './providers';
@@ -156,7 +155,6 @@ export default async function RootLayout({
             </SidebarProvider>
           </Providers>
         </NuqsAdapter>
-        <ClientAnalytics />
       </body>
     </html>
   );
