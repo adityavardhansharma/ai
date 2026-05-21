@@ -92,6 +92,10 @@ interface ChatInitializationParams {
   enableDetailedTiming?: boolean;
 }
 
+const REQUEST_TIMEOUT_MS = 120000;
+const MAX_TOOL_STEPS_DEFAULT = 5;
+const MAX_TOOL_STEPS_MCP = 12;
+
 function initializeChatAndChecks({
   chatQueryPromise,
   lightweightUser,
@@ -795,6 +799,10 @@ export async function POST(req: Request) {
   }
 
   const abortController = new AbortController();
+  const requestTimeout = setTimeout(() => {
+    console.warn(`⏱️ Request timeout reached (${REQUEST_TIMEOUT_MS}ms), aborting stream.`);
+    abortController.abort('request_timeout');
+  }, REQUEST_TIMEOUT_MS);
   let finalUsageMetadata: {
     completionTime: number | null;
     inputTokens: number | null;
@@ -961,7 +969,9 @@ export async function POST(req: Request) {
         model: shouldUseXaiMultiAgent ? xai.responses('grok-4.20-multi-agent') : scira.languageModel(model),
         messages: processedMessages,
         ...getModelParameters(shouldUseXaiMultiAgent ? 'grok-4.20-multi-agent' : model),
-        stopWhen: stepCountIs(shouldUseXaiMultiAgent ? 5 : group === 'mcp' ? 50 : 5),
+        stopWhen: stepCountIs(
+          shouldUseXaiMultiAgent ? MAX_TOOL_STEPS_DEFAULT : group === 'mcp' ? MAX_TOOL_STEPS_MCP : MAX_TOOL_STEPS_DEFAULT,
+        ),
         ...(shouldUseXaiMultiAgent
           ? {}
           : model === 'scira-default' ||
@@ -1537,11 +1547,13 @@ export async function POST(req: Request) {
           setUsageMetadataFromUsage(event.usage, processingTime);
         },
         onAbort(event) {
+          clearTimeout(requestTimeout);
           const processingTime = (Date.now() - streamStartTime) / 1000;
           setUsageMetadataFromSteps(event.steps, processingTime);
           closeMcpToolsSafe().catch(() => null);
         },
         onFinish: async (event) => {
+          clearTimeout(requestTimeout);
           // console.log('Finish event: ', event);
           const processingTime = (Date.now() - streamStartTime) / 1000;
           setUsageMetadataFromUsage(event.totalUsage, processingTime);
@@ -1602,6 +1614,7 @@ export async function POST(req: Request) {
           }
         },
         onError(event) {
+          clearTimeout(requestTimeout);
           const processingTime = (Date.now() - requestStartTime) / 1000;
           console.error(`❌ Request failed: ${processingTime.toFixed(2)}s`, event.error);
           closeMcpToolsSafe().catch(() => null);
