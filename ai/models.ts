@@ -2648,18 +2648,18 @@ export function getModelConfig(modelValue: string) {
 }
 
 export function requiresAuthentication(modelValue: string): boolean {
-  const model = getModelConfig(modelValue);
-  return model?.requiresAuth || false;
+  // Personal/family self-host mode: no model-level auth gating.
+  return false;
 }
 
 export function requiresProSubscription(modelValue: string): boolean {
-  const model = getModelConfig(modelValue);
-  return model?.pro || false;
+  // Billing/plan gating removed.
+  return false;
 }
 
 export function requiresMaxSubscription(modelValue: string): boolean {
-  const model = getModelConfig(modelValue);
-  return model?.max || false;
+  // Billing/plan gating removed.
+  return false;
 }
 
 export function isFreeUnlimited(modelValue: string): boolean {
@@ -2711,28 +2711,14 @@ export function canUseModel(
     return { canUse: false, reason: 'Model not found' };
   }
 
-  // Check if model requires authentication
-  if (model.requiresAuth && !user) {
-    return { canUse: false, reason: 'authentication_required' };
-  }
-
-  // Check if model requires Max subscription
-  if (model.max && !isMaxUser) {
-    return { canUse: false, reason: 'max_subscription_required' };
-  }
-
-  // Check if model requires Pro subscription (Max is a superset of Pro)
-  if (model.pro && !isProUser && !isMaxUser) {
-    return { canUse: false, reason: 'pro_subscription_required' };
-  }
-
+  // Personal/family self-host mode: disable auth/subscription model gates.
   return { canUse: true };
 }
 
 // Helper to check if user should bypass rate limits
 export function shouldBypassRateLimits(modelValue: string, user: any): boolean {
-  const model = getModelConfig(modelValue);
-  return Boolean(user && model?.freeUnlimited);
+  // Unlimited usage mode enabled for self-host deployments.
+  return true;
 }
 
 // Get acceptable file types for a model
