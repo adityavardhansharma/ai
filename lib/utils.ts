@@ -3,24 +3,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
   GlobalSearchIcon,
-  Database02Icon,
-  AtomicPowerIcon,
-  Bitcoin02Icon,
-  MicroscopeIcon,
-  NewTwitterIcon,
-  RedditIcon,
-  YoutubeIcon,
-  ChattingIcon,
-  AppleStocksIcon,
-  ConnectIcon,
-  CodeCircleIcon,
-  Github01Icon,
-  SpotifyIcon,
-  Chart03Icon,
-  CanvasIcon,
 } from '@hugeicons/core-free-icons';
-import { AgentNetworkIcon } from '@/components/icons/agent-network-icon';
-import { AppsIcon } from '@/components/icons/apps-icon';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,25 +21,7 @@ export function normalizeError(err: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
-export type SearchGroupId =
-  | 'web'
-  | 'x'
-  | 'academic'
-  | 'youtube'
-  | 'spotify'
-  | 'reddit'
-  | 'github'
-  | 'stocks'
-  | 'chat'
-  | 'extreme'
-  | 'memory'
-  | 'crypto'
-  | 'code'
-  | 'connectors'
-  | 'mcp'
-  | 'multi-agent'
-  | 'prediction'
-  | 'canvas';
+export type SearchGroupId = 'web';
 
 // Search provider information for dynamic descriptions
 export const searchProviderInfo = {
@@ -81,135 +46,6 @@ export function getSearchGroups(searchProvider: SearchProvider = 'exa') {
       description: getWebSearchDescription(searchProvider),
       icon: GlobalSearchIcon,
       show: true,
-    },
-    {
-      id: 'chat' as const,
-      name: 'Chat',
-      description: 'Talk to the model directly.',
-      icon: ChattingIcon,
-      show: true,
-    },
-    {
-      id: 'x' as const,
-      name: 'X',
-      description: 'Search X posts',
-      icon: NewTwitterIcon,
-      show: true,
-    },
-    {
-      id: 'stocks' as const,
-      name: 'Stocks',
-      description: 'Stock and currency information',
-      icon: AppleStocksIcon,
-      show: true,
-    },
-    {
-      id: 'connectors' as const,
-      name: 'Connectors',
-      description: 'Search Google Drive, Notion and OneDrive documents',
-      icon: ConnectIcon,
-      show: true,
-      requireAuth: true,
-      requirePro: true,
-    },
-    {
-      id: 'mcp' as const,
-      name: 'Apps',
-      description: 'Use tools from your connected apps',
-      icon: AppsIcon,
-      show: process.env.NEXT_PUBLIC_MCP_ENABLED === 'true',
-      requireAuth: true,
-      requirePro: true,
-    },
-    {
-      id: 'multi-agent' as const,
-      name: 'Multi-agent',
-      description: 'High-agency research with xAI web and X search plus grouped sources',
-      icon: AgentNetworkIcon,
-      show: true,
-      requireAuth: true,
-      requirePro: true,
-    },
-    {
-      id: 'code' as const,
-      name: 'Code',
-      description: 'Get context about languages and frameworks',
-      icon: CodeCircleIcon,
-      show: true,
-    },
-    {
-      id: 'academic' as const,
-      name: 'Academic',
-      description: 'Search academic papers and pdfs powered by Firecrawl',
-      icon: MicroscopeIcon,
-      show: true,
-    },
-    {
-      id: 'extreme' as const,
-      name: 'Extreme',
-      description: 'Deep research with multiple sources and analysis',
-      icon: AtomicPowerIcon,
-      show: true,
-      requireAuth: true,
-    },
-    {
-      id: 'memory' as const,
-      name: 'Memory',
-      description: 'Your personal memory companion',
-      icon: Database02Icon,
-      show: true,
-      requireAuth: true,
-    },
-    {
-      id: 'reddit' as const,
-      name: 'Reddit',
-      description: 'Search Reddit posts powered by Parallel',
-      icon: RedditIcon,
-      show: true,
-    },
-    {
-      id: 'github' as const,
-      name: 'GitHub',
-      description: 'Search GitHub repositories, code, and discussions',
-      icon: Github01Icon,
-      show: true,
-    },
-    {
-      id: 'crypto' as const,
-      name: 'Crypto',
-      description: 'Cryptocurrency research powered by CoinGecko',
-      icon: Bitcoin02Icon,
-      show: true,
-    },
-    {
-      id: 'prediction' as const,
-      name: 'Prediction',
-      description: 'Search prediction markets from Polymarket and Kalshi',
-      icon: Chart03Icon,
-      show: true,
-    },
-    {
-      id: 'youtube' as const,
-      name: 'YouTube',
-      description: 'Search content inside YouTube videos, channels and playlists',
-      icon: YoutubeIcon,
-      show: true,
-    },
-    {
-      id: 'spotify' as const,
-      name: 'Spotify',
-      description: 'Search songs, artists, and albums on Spotify',
-      icon: SpotifyIcon,
-      show: true,
-    },
-    {
-      id: 'canvas' as const,
-      name: 'Canvas',
-      description: 'Research and generate interactive dashboards and visual reports',
-      icon: CanvasIcon,
-      show: true,
-      requireAuth: true,
-      requirePro: true,
     },
   ] as const;
 }
