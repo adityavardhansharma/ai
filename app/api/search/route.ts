@@ -49,11 +49,11 @@ import { v7 as uuidv7 } from 'uuid';
 import { geolocation } from '@vercel/functions';
 import { all } from 'better-all';
 import { getBetterAllOptions } from '@/lib/better-all';
-import { GroqProviderOptions } from '@ai-sdk/groq';
+import type { GroqProviderOptions } from '@/ai/provider-sdk-types';
 import { markdownJoinerTransform } from '@/lib/parser';
 import { ChatMessage } from '@/lib/types';
-import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
-import { AnthropicProviderOptions } from '@ai-sdk/anthropic';
+import type { OpenAIResponsesProviderOptions } from '@/ai/provider-sdk-types';
+import type { AnthropicProviderOptions } from '@/ai/provider-sdk-types';
 import { getGroupConfig } from '@/lib/search/group-config';
 import {
   getCurrentUser,
@@ -61,10 +61,10 @@ import {
   getMessageCountAndExtremeSearchByUserIdAction,
 } from '@/lib/search/server-helpers';
 import { getCachedCustomInstructionsByUserId, getCachedUserPreferencesByUserId } from '@/lib/user-data-server';
-import { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@ai-sdk/google';
+import type { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@/ai/provider-sdk-types';
 import { unauthenticatedRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loadConfiguredTools } from '@/lib/search/tool-loader';
-import { CohereChatModelOptions } from '@ai-sdk/cohere';
+import type { CohereChatModelOptions } from '@/ai/provider-sdk-types';
 import { xai } from '@ai-sdk/xai';
 
 interface CriticalChecksResult {

@@ -48,7 +48,8 @@ import { chat, message, buildSession, dodosubscription, type User } from '@/lib/
 import { eq, desc, ilike, and, asc, inArray, notExists } from 'drizzle-orm';
 import { getDiscountConfig } from '@/lib/discount';
 import { get } from '@vercel/edge-config';
-import { GroqProviderOptions, groq } from '@ai-sdk/groq';
+import { groq } from '@ai-sdk/groq';
+import type { GroqProviderOptions } from '@/ai/provider-sdk-types';
 import { Client } from '@upstash/qstash';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import type { CharacterAlignmentResponseModel } from '@elevenlabs/elevenlabs-js/api/types/CharacterAlignmentResponseModel';
@@ -82,9 +83,9 @@ import { saveChat, saveMessages } from '@/lib/db/queries';
 import { all, allSettled } from 'better-all';
 import { getBetterAllOptions } from '@/lib/better-all';
 import { getGroupConfig as getSearchGroupConfig } from '@/lib/search/group-config';
-import { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@ai-sdk/google';
-import { GatewayProviderOptions } from '@ai-sdk/gateway';
-import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+import type { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@/ai/provider-sdk-types';
+import type { GatewayProviderOptions } from '@/ai/provider-sdk-types';
+import type { OpenAIResponsesProviderOptions } from '@/ai/provider-sdk-types';
 
 // Server action to get the current user with Pro status - UNIFIED VERSION
 export async function getCurrentUser() {
