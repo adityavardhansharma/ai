@@ -2,6 +2,26 @@
 
 import { useAuth, useUser } from '@clerk/nextjs';
 
+const notAvailable = async () => ({ data: null, error: { message: 'Billing auth client removed during Clerk migration' } });
+
+export const betterauthClient: any = {
+  dodopayments: {
+    checkoutSession: notAvailable,
+    customer: {
+      portal: async () => null,
+      subscriptions: { list: async () => ({ data: [], error: null }) },
+    },
+  },
+};
+
+export const authClient: any = {
+  getLastUsedLoginMethod: () => ({ data: null }),
+  customer: {
+    portal: async () => null,
+    orders: { list: async () => ({ data: [], error: null }) },
+  },
+};
+
 export const signIn = () => {
   window.location.href = '/sign-in';
 };
@@ -29,6 +49,5 @@ export const useSession = () => {
 };
 
 export const signOut = async () => {
-  const { signOut } = await import('@clerk/nextjs');
-  await signOut();
+  window.location.href = '/';
 };

@@ -11,7 +11,7 @@ type Session = {
   user: SessionUser;
 } | null;
 
-async function getSession(): Promise<Session> {
+async function getSession(_input?: { headers?: Headers } | Request): Promise<Session> {
   const { userId } = await clerkAuth();
   if (!userId) return null;
 
