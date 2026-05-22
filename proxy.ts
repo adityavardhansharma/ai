@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionCookie } from 'better-auth/cookies';
+import { auth as clerkAuth } from '@clerk/nextjs/server';
 
 const authRoutes = ['/sign-in', '/sign-up'];
 const protectedRoutes = ['/settings', '/searches'];
@@ -30,24 +30,23 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = getSessionCookie(request);
+  const { userId } = await clerkAuth();
+  const isAuthenticated = Boolean(userId);
 
   // Allow /settings as a real page; still protect it behind auth
   if (pathname === '/settings') {
-    if (!sessionCookie) {
+    if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/sign-in', request.url));
     }
     return NextResponse.next();
   }
 
   // If user is authenticated but trying to access auth routes
-  if (sessionCookie && authRoutes.some((route) => pathname.startsWith(route))) {
-    console.log('Redirecting to home');
-    console.log('Session cookie: ', sessionCookie);
+  if (isAuthenticated && authRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (!sessionCookie && protectedRoutes.some((route) => pathname.startsWith(route))) {
+  if (!isAuthenticated && protectedRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 

@@ -199,7 +199,6 @@ import MultiSearch from '@/components/multi-search';
 import TrendingResults from '@/components/trending-tv-movies-results';
 import AcademicPapersCard from '@/components/academic-papers';
 import WeatherChart from '@/components/weather-chart';
-import RedditSearch from '@/components/reddit-search';
 import GitHubSearch from '@/components/github-search';
 import PredictionSearch from '@/components/prediction-search';
 import { TextTranslate } from '@/components/text-translate';
@@ -208,8 +207,6 @@ import { ExtremeSearch } from '@/components/extreme-search';
 import { CoinData as CryptoCoinsData } from '@/components/crypto-coin-data';
 import { CurrencyConverter } from '@/components/currency_conv';
 import { YouTubeSearchResults } from '@/components/youtube-search-results';
-import { SpotifySearchResults } from '@/components/spotify-search-results';
-import { ConnectorsSearchResults } from '@/components/connectors-search-results';
 import { CodeInterpreterView, NearbySearchSkeleton } from '@/components/tool-invocation-list-view';
 import { RetrieveResults } from '@/components/retrieve-results';
 import FileQuerySearch from '@/components/file-query-search';
@@ -3787,74 +3784,6 @@ export const MessagePartRenderer = memo<MessagePartRendererProps>(
             }
             break;
 
-          case 'tool-stock_chart':
-            switch (part.state) {
-              case 'input-streaming':
-              case 'input-available':
-                return (
-                  <StockChartLoader
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    title={part.input?.title || 'Preparing financial analysis...'}
-                    input={part.input}
-                  />
-                );
-              case 'output-available':
-                return (
-                  <InteractiveStockChart
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    title={part.input.title}
-                    chart={{
-                      ...part.output.chart,
-                      x_scale: 'datetime',
-                    }}
-                    data={part.output.chart.elements}
-                    stock_symbols={part.input.companies || []}
-                    currency_symbols={
-                      part.output.currency_symbols ||
-                      part.input.currency_symbols ||
-                      part.input.companies?.map(() => 'USD') || ['USD']
-                    }
-                    interval={part.input.time_period || '1 year'}
-                    resolved_companies={
-                      part.output.resolved_companies?.map((company) => ({
-                        ...company,
-                        ticker: company.ticker || company.name || 'N/A',
-                      })) || []
-                    }
-                    earnings_data={
-                      part.output.earnings_data?.map((earning) => ({
-                        ...earning,
-                        ticker: earning.ticker || 'N/A',
-                      })) || []
-                    }
-                    news_results={part.output.news_results}
-                    sec_filings={
-                      part.output.sec_filings?.map((filing) => ({
-                        id: filing.id,
-                        title: filing.title,
-                        url: filing.url,
-                        content: filing.content,
-                        metadata: filing.metadata,
-                        requestedCompany: 'requestedCompany' in filing ? String(filing.requestedCompany) : 'N/A',
-                        requestedFilingType:
-                          'requestedFilingType' in filing
-                            ? String(filing.requestedFilingType)
-                            : 'form_type' in filing
-                              ? String(filing.form_type)
-                              : '10-K',
-                      })) || []
-                    }
-                    company_statistics={part.output.company_statistics}
-                    balance_sheets={part.output.balance_sheets}
-                    income_statements={part.output.income_statements}
-                    cash_flows={part.output.cash_flows}
-                    dividends_data={part.output.dividends_data}
-                    insider_transactions={part.output.insider_transactions}
-                    market_movers={part.output.market_movers}
-                  />
-                );
-            }
-            break;
 
           case 'tool-get_weather_data':
             switch (part.state) {
@@ -4332,23 +4261,6 @@ export const MessagePartRenderer = memo<MessagePartRendererProps>(
             }
             break;
 
-          case 'tool-reddit_search':
-            switch (part.state) {
-              case 'input-streaming':
-              case 'input-available':
-              case 'output-available':
-                const redditSearchInput = part.input;
-                const redditSearchOutput = part.output;
-                return (
-                  <RedditSearch
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    result={redditSearchOutput || null}
-                    args={redditSearchInput ? redditSearchInput : {}}
-                    annotations={annotations as DataQueryCompletionPart[]}
-                  />
-                );
-            }
-            break;
 
           case 'tool-github_search':
             switch (part.state) {
@@ -4499,30 +4411,6 @@ export const MessagePartRenderer = memo<MessagePartRendererProps>(
             }
             break;
 
-          case 'tool-spotify_search':
-            switch (part.state) {
-              case 'input-streaming':
-              case 'input-available':
-                return (
-                  <SpotifySearchResults
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    result={{
-                      success: true,
-                      query: part.input?.query || '',
-                      searchTypes: ['track'],
-                      tracks: [],
-                      artists: [],
-                      albums: [],
-                      playlists: [],
-                      totals: { tracks: 0, artists: 0, albums: 0, playlists: 0 },
-                    }}
-                    isLoading={true}
-                  />
-                );
-              case 'output-available':
-                return <SpotifySearchResults key={`${messageIndex}-${partIndex}-tool`} result={part.output} />;
-            }
-            break;
 
           case 'tool-search_memories':
             switch (part.state) {
@@ -4703,30 +4591,6 @@ export const MessagePartRenderer = memo<MessagePartRendererProps>(
             }
             break;
 
-          case 'tool-connectors_search':
-            switch (part.state) {
-              case 'input-streaming':
-              case 'input-available':
-                return (
-                  <ConnectorsSearchResults
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    results={[]}
-                    query={part.input?.query || ''}
-                    totalResults={0}
-                    isLoading={true}
-                  />
-                );
-              case 'output-available':
-                return (
-                  <ConnectorsSearchResults
-                    key={`${messageIndex}-${partIndex}-tool`}
-                    results={part.output?.success ? part.output.results : []}
-                    query={part.output?.success ? part.output.query : ''}
-                    totalResults={part.output?.success ? part.output.count : 0}
-                  />
-                );
-            }
-            break;
 
           case 'tool-nearby_places_search':
             switch (part.state) {

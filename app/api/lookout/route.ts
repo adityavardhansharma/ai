@@ -31,10 +31,6 @@ import {
   extremeSearchTool,
   webSearchTool,
   academicSearchTool,
-  youtubeSearchTool,
-  redditSearchTool,
-  githubSearchTool,
-  stockChartTool,
   currencyConverterTool,
   coinDataTool,
   coinOhlcTool,
@@ -45,7 +41,6 @@ import {
   greetingTool,
   retrieveTool,
   weatherTool,
-  codeInterpreterTool,
   findPlaceOnMapTool,
   nearbyPlacesSearchTool,
   flightTrackerTool,
@@ -56,7 +51,6 @@ import {
 } from '@/lib/tools';
 import { ChatMessage } from '@/lib/types';
 import { type UIMessageStreamWriter } from 'ai';
-import { XaiProviderOptions } from '@ai-sdk/xai';
 
 /**
  * Truncates markdown at a natural paragraph boundary to avoid broken links,
@@ -196,8 +190,6 @@ function truncateMarkdown(text: string, maxLength: number): string {
 
 // Static tool instances (already created, don't need to be called as functions)
 const STATIC_TOOLS: Record<string, any> = {
-  youtube_search: youtubeSearchTool,
-  stock_chart: stockChartTool,
   currency_converter: currencyConverterTool,
   coin_data: coinDataTool,
   coin_ohlc: coinOhlcTool,
@@ -207,7 +199,6 @@ const STATIC_TOOLS: Record<string, any> = {
   greeting: greetingTool,
   retrieve: retrieveTool,
   get_weather_data: weatherTool,
-  code_interpreter: codeInterpreterTool,
   find_place_on_map: findPlaceOnMapTool,
   nearby_places_search: nearbyPlacesSearchTool,
   track_flight: flightTrackerTool,
@@ -222,8 +213,6 @@ const DATASTREAM_TOOL_FACTORIES: Record<string, (dataStream: UIMessageStreamWrit
   extreme_search: (dataStream) => extremeSearchTool(dataStream), // overridden in getToolsForSearchMode when modelId is available
   web_search: webSearchTool,
   academic_search: academicSearchTool,
-  reddit_search: redditSearchTool,
-  github_search: githubSearchTool,
   x_search: xSearchTool,
 };
 
@@ -233,7 +222,6 @@ const SEARCH_MODE_TOOLS: Record<string, readonly string[]> = {
   web: [
     'web_search',
     'greeting',
-    'code_interpreter',
     'get_weather_data',
     'retrieve',
     'text_translate',
@@ -245,14 +233,9 @@ const SEARCH_MODE_TOOLS: Record<string, readonly string[]> = {
     'trending_tv',
     'datetime',
   ],
-  academic: ['academic_search', 'code_interpreter', 'datetime'],
-  youtube: ['youtube_search', 'datetime'],
-  reddit: ['reddit_search', 'datetime'],
-  github: ['github_search', 'datetime'],
-  stocks: ['stock_chart', 'currency_converter', 'datetime'],
+  academic: ['academic_search', 'datetime'],
   code: ['code_context'],
   x: ['x_search'],
-  chat: [],
 };
 
 // Get tools for a search mode
@@ -740,11 +723,6 @@ export async function POST(req: Request) {
           system: systemPrompt,
           toolChoice: 'auto',
           tools,
-          providerOptions: {
-            xai: {
-              parallel_function_calling: false,
-            } satisfies XaiProviderOptions,
-          },
           onChunk(event) {
             if (event.chunk.type === 'tool-call') {
               console.log('Called Tool: ', event.chunk.toolName);
