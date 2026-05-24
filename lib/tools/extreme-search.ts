@@ -29,11 +29,12 @@ import { ExcelReader } from '@vectorstores/excel';
 import { vercelEmbedding } from '@vectorstores/vercel';
 import { cohere } from '@ai-sdk/cohere';
 import { rerank } from 'ai';
-import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
-import { AnthropicProviderOptions } from '@ai-sdk/anthropic';
+import type { OpenAIResponsesProviderOptions } from '@/ai/provider-sdk-types';
+import type { AnthropicProviderOptions } from '@/ai/provider-sdk-types';
 import { SNAPSHOT_NAME } from '../constants';
-import { gateway, GatewayProviderOptions } from '@ai-sdk/gateway';
-import { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@ai-sdk/google';
+import { gateway } from '@ai-sdk/gateway';
+import type { GatewayProviderOptions } from '@/ai/provider-sdk-types';
+import type { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@/ai/provider-sdk-types';
 import { TokenClient } from 'tokenc';
 import { scrapeWebpageWithNotte } from '@/lib/notte';
 

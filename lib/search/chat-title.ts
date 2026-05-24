@@ -1,9 +1,9 @@
 import 'server-only';
 
 import { generateText, UIMessage } from 'ai';
-import { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@ai-sdk/google';
-import { GatewayProviderOptions } from '@ai-sdk/gateway';
-import { OpenAIResponsesProviderOptions } from '@ai-sdk/openai';
+import type { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@/ai/provider-sdk-types';
+import type { GatewayProviderOptions } from '@/ai/provider-sdk-types';
+import type { OpenAIResponsesProviderOptions } from '@/ai/provider-sdk-types';
 
 import { scira } from '@/ai/providers';
 
