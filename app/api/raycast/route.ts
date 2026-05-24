@@ -1,13 +1,7 @@
 import { webSearchTool } from '@/lib/tools';
 import { xSearchTool } from '@/lib/tools/x-search';
-import { convertToModelMessages, customProvider, generateText, stepCountIs } from 'ai';
-import { xai } from '@ai-sdk/xai';
-
-const scira = customProvider({
-  languageModels: {
-    'scira-default': xai('grok-4-1-fast-non-reasoning'),
-  },
-});
+import { convertToModelMessages, generateText, stepCountIs } from 'ai';
+import { scira } from '@/ai/providers';
 
 export const maxDuration = 800;
 

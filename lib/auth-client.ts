@@ -2,9 +2,9 @@
 
 import { useAuth, useUser } from '@clerk/nextjs';
 
-const notAvailable = async () => ({ data: null, error: { message: 'Billing auth client removed during Clerk migration' } });
+const notAvailable = async () => ({ data: null, error: { message: 'Legacy billing client removed after Clerk migration' } });
 
-export const betterauthClient: any = {
+export const legacyBillingClient: any = {
   dodopayments: {
     checkoutSession: notAvailable,
     customer: {

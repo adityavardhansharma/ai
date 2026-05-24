@@ -65,7 +65,6 @@ import { GoogleGenerativeAIProviderOptions, GoogleLanguageModelOptions } from '@
 import { unauthenticatedRateLimit, getClientIdentifier } from '@/lib/rate-limit';
 import { loadConfiguredTools } from '@/lib/search/tool-loader';
 import { CohereChatModelOptions } from '@ai-sdk/cohere';
-import { xai } from '@ai-sdk/xai';
 
 interface CriticalChecksResult {
   canProceed: boolean;
@@ -957,12 +956,10 @@ export async function POST(req: Request) {
       }
 
       const result = streamText({
-        model: shouldUseXaiMultiAgent ? xai.responses('grok-4.20-multi-agent') : scira.languageModel(model),
+        model: scira.languageModel(model),
         messages: processedMessages,
-        ...getModelParameters(shouldUseXaiMultiAgent ? 'grok-4.20-multi-agent' : model),
-        stopWhen: stepCountIs(
-          shouldUseXaiMultiAgent ? MAX_TOOL_STEPS_DEFAULT : MAX_TOOL_STEPS_DEFAULT,
-        ),
+        ...getModelParameters(model),
+        stopWhen: stepCountIs(MAX_TOOL_STEPS_DEFAULT),
         ...(shouldUseXaiMultiAgent
           ? {}
           : model === 'scira-default' ||
