@@ -93,7 +93,7 @@ const xqlTool = tool({
     }
 
     const result = await generateText({
-      model: xai.responses('grok-4-1-fast-non-reasoning'),
+      model: scira.languageModel('scira-default'),
       prompt: query,
       stopWhen: stepCountIs(1),
       maxOutputTokens: 10,

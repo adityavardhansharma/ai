@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { xai } from '@ai-sdk/xai';
 import { generateText, Output, stepCountIs } from 'ai';
+import { scira } from '@/ai/providers';
 import { z } from 'zod';
 import { getTweet } from 'react-tweet/api';
 import { Redis } from '@upstash/redis';
@@ -210,7 +211,7 @@ export async function POST(req: NextRequest) {
     // - Includes quarterly searches (Q1-Q4) to get month distribution
     // - Returns citations/sources only (NO structured output here)
     const { text, sources } = await generateText({
-      model: xai.responses('grok-4-fast'),
+      model: scira.languageModel('scira-grok-4-fast'),
       system: `You are generating an \"X Wrapped\" for @${cleanUsername} for ${year}.
 
 Hard rules:
@@ -369,7 +370,7 @@ Hard rules:
     // - Must be grounded ONLY in tweet texts we fetched (no invention)
     // - Uses text from first generateText call for additional context
     const { output } = await generateText({
-      model: xai('grok-4-fast-non-reasoning'),
+      model: scira.languageModel('scira-default'),
       system: `You are writing an \"X Wrapped\" summary based strictly on provided X post texts and search context.
 
 Rules:

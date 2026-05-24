@@ -31,6 +31,3 @@ export const auth = {
   },
 };
 
-// Temporary billing stubs while migrating away from Better Auth billing plugins.
-export const polarClient = null;
-export const dodoPayments = null;
